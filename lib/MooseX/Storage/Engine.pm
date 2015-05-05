@@ -232,7 +232,9 @@ my %TYPES;
             foreach my $i (0 .. $#{$array}) {
                 if (ref($array->[$i]) eq 'HASH') {
                     $array->[$i] = exists($array->[$i]{$CLASS_MARKER})
-                        ? $OBJECT_HANDLERS{expand}->($array->[$i], @args)
+                        ? $TYPES{ $array->[$i]{$CLASS_MARKER} }
+                            ? $TYPES{ $array->[$i]{$CLASS_MARKER} }{expand}->($array->[$i], @args)
+                            : $OBJECT_HANDLERS{expand}->($array->[$i], @args)
                         : $TYPES{HashRef}{expand}->($array->[$i], @args);
                 }
                 elsif (ref($array->[$i]) eq 'ARRAY') {
@@ -251,12 +253,9 @@ my %TYPES;
                 $TYPES{ref($_)}
                     ? $TYPES{ref($_)}->{collapse}->($_, @args)
                     : blessed($_)
-                    ? $OBJECT_HANDLERS{collapse}->( $_, @args )
-                    : $TYPES{ ref($_) }
-                        ? $TYPES{ ref($_) }->{collapse}->( $_, @args )
-                        : $_
-                } @$array
-            ]
+                    ? $OBJECT_HANDLERS{collapse}->($_, @args)
+                    : $_
+            } @$array ]
         }
     },
     'HashRef'  => {
@@ -265,7 +264,9 @@ my %TYPES;
             foreach my $k (keys %$hash) {
                 if (ref($hash->{$k}) eq 'HASH' ) {
                     $hash->{$k} = exists($hash->{$k}->{$CLASS_MARKER})
-                        ? $OBJECT_HANDLERS{expand}->($hash->{$k}, @args)
+                        ? $TYPES{ $hash->{$k}->{$CLASS_MARKER} }
+                            ? $TYPES{ $hash->{$k}->{$CLASS_MARKER} }{expand}->($hash->{$k}, @args)
+                            : $OBJECT_HANDLERS{expand}->($hash->{$k}, @args)
                         : $TYPES{HashRef}{expand}->($hash->{$k}, @args);
                 }
                 elsif (ref($hash->{$k}) eq 'ARRAY') {
@@ -280,16 +281,13 @@ my %TYPES;
             # we need to make a copy because
             # otherwise it will affect the
             # other real version.
-
             +{ map {
-                blessed( $hash->{$_} )
-                    ? ($_ => $OBJECT_HANDLERS{collapse}->($hash->{$_}, @args))
-                    : $TYPES{ref($hash->{$_})}
+                $TYPES{ref($hash->{$_})}
                     ? ($_ => $TYPES{ref($hash->{$_})}{collapse}->($hash->{$_}, @args))
+                    : blessed($hash->{$_})
+                        ? ($_ => $OBJECT_HANDLERS{collapse}->($hash->{$_}, @args))
                         : ($_ => $hash->{$_})
-
-                } keys %$hash
-            }
+            } keys %$hash }
         }
     },
     'Object'   => \%OBJECT_HANDLERS,
