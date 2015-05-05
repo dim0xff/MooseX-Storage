@@ -238,14 +238,6 @@ my %TYPES;
                 elsif (ref($array->[$i]) eq 'ARRAY') {
                     $array->[$i] = $TYPES{ArrayRef}{expand}->($array->[$i], @args);
                 }
-                    }
-                    else {
-                        $array->[$i] = $TYPES{HashRef}->{expand}->( $array->[$i], @args );
-                    }
-                }
-                elsif ( ref( $array->[$i] ) eq 'ARRAY' ) {
-                    $array->[$i] = $TYPES{ArrayRef}->{expand}->( $array->[$i], @args );
-                }
             }
             $array;
         },
@@ -279,14 +271,6 @@ my %TYPES;
                 elsif (ref($hash->{$k}) eq 'ARRAY') {
                     $hash->{$k} = $TYPES{ArrayRef}{expand}->($hash->{$k}, @args);
                 }
-                    }
-                    else {
-                        $hash->{$k} = $TYPES{HashRef}->{expand}->( $hash->{$k}, @args );
-                    }
-                }
-                elsif ( ref( $hash->{$k} ) eq 'ARRAY' ) {
-                    $hash->{$k} = $TYPES{ArrayRef}->{expand}->( $hash->{$k}, @args );
-                }
             }
             $hash;
         },
@@ -318,13 +302,6 @@ my %TYPES;
     #    collapse => sub {}, # use B::Deparse ...
     #}
 );
-
-%TYPES = (
-    %TYPES,
-    'HASH'  => $TYPES{HashRef},
-    'ARRAY' => $TYPES{ArrayRef},
-);
-
 
 %TYPES = (
     %TYPES,
