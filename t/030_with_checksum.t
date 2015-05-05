@@ -7,13 +7,11 @@ use Test::Deep;
 
 use Test::Requires qw(
     Digest::HMAC_SHA1
-    JSON::Any
+    JSON::MaybeXS
 );
+diag 'using JSON backend: ', JSON;
 
-BEGIN {
-    plan tests => 26;
-    use_ok('MooseX::Storage');
-}
+plan tests => 25;
 
 {
     package Foo;

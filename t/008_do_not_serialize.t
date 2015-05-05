@@ -1,13 +1,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 13;
+use Test::More tests => 12;
 use Test::Deep;
-use Test::Fatal;
-
-BEGIN {
-    use_ok('MooseX::Storage');
-}
 
 {
     package Foo;
@@ -94,8 +89,3 @@ BEGIN {
     my $bar2 = Bar->unpack( $bpack, inject => { foo => bless {} } );
     ok( $bar2,                  "   Unpacked correctly with foo => Object");
 }
-
-
-
-
-

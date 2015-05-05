@@ -9,12 +9,10 @@ use File::Spec::Functions;
 
 my $dir = tempdir;
 
-use Test::Requires 'JSON::Any';
+use Test::Requires 'JSON::MaybeXS';
+diag 'using JSON backend: ', JSON;
 
-BEGIN {
-    plan tests => 10;
-    use_ok('MooseX::Storage');
-}
+plan tests => 9;
 
 {
     package Foo;
@@ -63,4 +61,3 @@ my $file = catfile($dir, 'temp.json');
     isa_ok($foo->object, 'Foo');
     is($foo->object->number, 2, '... got the right number (in the embedded object)');
 }
-

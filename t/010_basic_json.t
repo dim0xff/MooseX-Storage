@@ -5,17 +5,14 @@ use Test::More;
 use Test::Deep;
 
 use Test::Requires qw(
-    JSON::Any
+    JSON::MaybeXS
     Test::Deep::JSON
 );
+diag 'using JSON backend: ', JSON;
 
-BEGIN {
-    plan tests => 11;
-    use_ok('MooseX::Storage');
-}
+plan tests => 10;
 
 {
-
     package Foo;
     use Moose;
     use MooseX::Storage;
@@ -82,4 +79,3 @@ BEGIN {
     is( $foo->object->number, 2,
         '... got the right number (in the embedded object)' );
 }
-

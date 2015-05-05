@@ -1,6 +1,8 @@
 package MooseX::Storage::Engine::IO::AtomicFile;
 # ABSTRACT: The actual atomic file storage mechanism.
 
+our $VERSION = '0.51';
+
 use Moose;
 use IO::AtomicFile;
 use Carp 'confess';
@@ -12,6 +14,8 @@ sub store {
     my ($self, $data) = @_;
     my $fh = IO::AtomicFile->new($self->file, 'w')
         || confess "Unable to open file (" . $self->file . ") for storing : $!";
+
+    # TODO ugh! this is surely wrong and should be fixed.
     $fh->binmode(':utf8') if utf8::is_utf8($data);
     print $fh $data;
     $fh->close()

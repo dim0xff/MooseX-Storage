@@ -10,12 +10,12 @@ use Test::Requires qw(
     YAML::XS
     Test::Without::Module
 );
+diag 'using YAML backend: ', YAML::Any->implementation;
 
 BEGIN {
     Test::Without::Module->import(YAML::Any->order);
     Test::Without::Module->unimport('YAML::XS');
-    plan tests => 10;
-    use_ok('MooseX::Storage');
+    plan tests => 9;
 }
 
 {
@@ -63,4 +63,3 @@ BEGIN {
     is( $bar->object->number, 2,
         '... got the right number (in the embedded object)' );
 }
-

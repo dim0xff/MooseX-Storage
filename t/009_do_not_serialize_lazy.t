@@ -3,11 +3,6 @@ use warnings;
 
 use Test::More 'no_plan';#tests => 6;
 use Test::Deep;
-use Test::Fatal;
-
-BEGIN {
-    use_ok('MooseX::Storage');
-}
 
 {   package Point;
     use Moose;

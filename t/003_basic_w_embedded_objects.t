@@ -1,12 +1,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 58;
+use Test::More tests => 57;
 use Test::Deep;
-
-BEGIN {
-    use_ok('MooseX::Storage');
-}
 
 =pod
 
@@ -33,7 +29,7 @@ ArrayRef and HashRef type handlers.
 
     has 'bars' => (
         is  => 'ro',
-        isa => 'ArrayRef'
+        isa => 'ArrayRef[Bar]'
     );
 
     package Baz;
@@ -44,7 +40,7 @@ ArrayRef and HashRef type handlers.
 
     has 'bars' => (
         is  => 'ro',
-        isa => 'HashRef'
+        isa => 'HashRef[Bar]'
     );
 
     package Qux;
@@ -108,7 +104,6 @@ ArrayRef and HashRef type handlers.
         is($foo->bars->[$i - 1]->number, $i, "... got the right number ($i) in the Bar in Foo");
     }
 }
-
 
 {
     my $baz = Baz->new(

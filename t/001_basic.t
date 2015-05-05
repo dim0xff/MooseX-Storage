@@ -1,15 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
+use Test::More tests => 13;
 use Test::Deep;
 
-BEGIN {
-    use_ok('MooseX::Storage');
-}
-
 {
-
     package Foo;
     use Moose;
     use MooseX::Storage;
