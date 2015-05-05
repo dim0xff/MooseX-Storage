@@ -1,13 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 18;
+use Test::More tests => 17;
 use Test::Deep;
 use Test::Fatal;
 
-BEGIN {
-    use_ok('MooseX::Storage');
-}
 
 # This test demonstrates two things:
 #
@@ -15,7 +12,6 @@ BEGIN {
 # - you can use a special metaclass to tell MooseX::Storage to skip an attribute
 
 {
-
     package Circular;
     use Moose;
     use MooseX::Storage;
@@ -48,7 +44,6 @@ BEGIN {
 }
 
 {
-
     package Tree;
     use Moose;
     use MooseX::Storage;
@@ -153,7 +148,6 @@ BEGIN {
     ok( $pack,                  "   Object packs when cycle check is disabled");
     ok( Double->unpack( $pack ),
                                 "   And unpacked again" );
-
 }
 
 ### the same as above, but now done with a trait

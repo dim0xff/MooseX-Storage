@@ -1,115 +1,14 @@
-package MooseX::Storage;
-# ABSTRACT: A serialization framework for Moose classes
-# KEYWORDS: moose extension serial serialization class object store storage types strings
-
-our $VERSION = '0.51';
-
-use Moose 0.99;
-use MooseX::Storage::Meta::Attribute::DoNotSerialize;
-use String::RewritePrefix ();
-use Module::Runtime 'use_module';
-use Carp 'confess';
-use namespace::autoclean;
-
-sub import {
-    my $pkg = caller();
-
-    return if $pkg eq 'main';
-
-    ($pkg->can('meta'))
-        || confess "This package can only be used in Moose based classes";
-
-    $pkg->meta->add_method('Storage' => __PACKAGE__->meta->find_method_by_name('_injected_storage_role_generator'));
-}
-
-my %HORRIBLE_GC_AVOIDANCE_HACK;
-
-sub _rewrite_role_name {
-    my ($self, $base, $string) = @_;
-
-    my $role_name = scalar String::RewritePrefix->rewrite(
-        {
-            ''  => "MooseX::Storage::$base\::",
-            '=' => '',
-        },
-        $string,
-    );
-}
-
-sub _expand_role {
-    my ($self, $base, $value) = @_;
-
-    return unless defined $value;
-
-    if (ref $value) {
-        confess "too many args in arrayref role declaration" if @$value > 2;
-        my ($class, $param) = @$value;
-
-        $class = $self->_rewrite_role_name($base => $class);
-        use_module($class);
-
-        my $role = $class->meta->generate_role(parameters => $param);
-
-        $HORRIBLE_GC_AVOIDANCE_HACK{ $role->name } = $role;
-        return $role->name;
-    } else {
-        my $class = $self->_rewrite_role_name($base, $value);
-        use_module($class);
-
-        if ($class->meta->isa('MooseX::Role::Parameterized::Meta::Role::Parameterizable')
-            or ($class->meta->meta->can('does_role')
-                && $class->meta->meta->does_role('MooseX::Role::Parameterized::Meta::Trait::Parameterizable'))
-        ) {
-            my $role = $class->meta->generate_role(parameters => undef);
-            $HORRIBLE_GC_AVOIDANCE_HACK{ $role->name } = $role;
-            return $role->name;
-        }
-
-        return $class;
-    }
-}
-
-sub _injected_storage_role_generator {
-    my %params = @_;
-
-    $params{base} = '=MooseX::Storage::Basic' unless defined $params{base};
-
-    my @roles = __PACKAGE__->_expand_role(Base => $params{base});
-
-    # NOTE:
-    # you don't have to have a format
-    # role, this just means you don't
-    # get anything other than pack/unpack
-    push @roles, __PACKAGE__->_expand_role(Format => $params{format});
-
-    # NOTE:
-    # many IO roles don't make sense unless
-    # you have also have a format role chosen
-    # too, the exception being StorableFile
-    #
-    # NOTE:
-    # we don't need this code anymore, because
-    # the role composition will catch it for
-    # us. This allows the StorableFile to work
-    #(exists $params{'format'})
-    #    || confess "You must specify a format role in order to use an IO role";
-    push @roles, __PACKAGE__->_expand_role(IO => $params{io});
-
-    # Note:
-    # These traits alter the behaviour of the engine, the user can
-    # specify these per role-usage
-    for my $trait ( @{ $params{'traits'} ||= [] } ) {
-        push @roles, __PACKAGE__->_expand_role(Traits => $trait);
-    }
-
-    return @roles;
-}
-
-1;
-
-__END__
-
 =pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MooseX::Storage - A serialization framework for Moose classes
+
+=head1 VERSION
+
+version 0.50
 
 =head1 SYNOPSIS
 
@@ -361,5 +260,114 @@ in the #moose channel on irc.perl.org.
 All complex software has bugs lurking in it, and this module is no
 exception. If you find a bug please or add the bug to cpan-RT
 at L<https://rt.cpan.org/Dist/Display.html?Queue=MooseX-Storage>.
+
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Chris Prather <chris.prather@iinteractive.com>
+
+=item *
+
+Stevan Little <stevan.little@iinteractive.com>
+
+=item *
+
+יובל קוג'מן (Yuval Kogman) <nothingmuch@woobling.org>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2007 by Infinity Interactive, Inc..
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=head1 CONTRIBUTORS
+
+=for stopwords Karen Etheridge Tomas Doran Ricardo Signes Chris Prather Jos Boumans Shawn M Moore Jonathan Yu Dagfinn Ilmari Mannsåker Dmitry Latin Cory Watson Robert Boone sillitoe Dan Brook David Golden Steinbrunner Florian Ragwitz Jason Pope Johannes Plunien Rockway
+
+=over 4
+
+=item *
+
+Karen Etheridge <ether@cpan.org>
+
+=item *
+
+Tomas Doran <bobtfish@bobtfish.net>
+
+=item *
+
+Ricardo Signes <rjbs@cpan.org>
+
+=item *
+
+Chris Prather <chris@prather.org>
+
+=item *
+
+Jos Boumans <jos@dwim.org>
+
+=item *
+
+Shawn M Moore <sartak@gmail.com>
+
+=item *
+
+Jonathan Yu <frequency@cpan.org>
+
+=item *
+
+Dagfinn Ilmari Mannsåker <ilmari@ilmari.org>
+
+=item *
+
+Dmitry Latin <dim0xff@gmail.com>
+
+=item *
+
+Cory Watson <gphat@Crankwizzah.local>
+
+=item *
+
+Robert Boone <robo4288@gmail.com>
+
+=item *
+
+sillitoe <ian@sillit.com>
+
+=item *
+
+Dan Brook <dan@broquaint.com>
+
+=item *
+
+David Golden <dagolden@cpan.org>
+
+=item *
+
+David Steinbrunner <dsteinbrunner@pobox.com>
+
+=item *
+
+Florian Ragwitz <rafl@debian.org>
+
+=item *
+
+Jason Pope <cowholio4@gmail.com>
+
+=item *
+
+Johannes Plunien <plu@pqpq.de>
+
+=item *
+
+Jonathan Rockway <jon@jrock.us>
+
+=back
 
 =cut

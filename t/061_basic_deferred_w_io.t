@@ -10,13 +10,11 @@ my $dir = tempdir;
 
 use Test::Requires qw(
     IO::AtomicFile
-    JSON::Any
+    JSON::MaybeXS
 );
+diag 'using JSON backend: ', JSON;
 
-BEGIN {
-    plan tests => 20;
-    use_ok('MooseX::Storage');
-}
+plan tests => 23;
 
 {
     package Foo;
@@ -25,6 +23,8 @@ BEGIN {
 
     with 'MooseX::Storage::Deferred';
 
+    has 'unset'  => ( is => 'ro', isa => 'Any' );
+    has 'undef'  => ( is => 'ro', isa => 'Any' );
     has 'number' => (is => 'ro', isa => 'Int');
     has 'string' => (is => 'ro', isa => 'Str');
     has 'float'  => (is => 'ro', isa => 'Num');
@@ -37,6 +37,7 @@ my $file = catfile($dir, 'temp.json');
 
 {
     my $foo = Foo->new(
+        undef  => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -68,6 +69,7 @@ ok(!(-e $file), '... the file has been deleted');
 
 {
     my $foo = Foo->new(
+        undef  => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -84,6 +86,10 @@ ok(!(-e $file), '... the file has been deleted');
     my $foo = Foo->load($file, { format => 'JSON', io => 'AtomicFile' });
     isa_ok($foo, 'Foo');
 
+    is( $foo->unset, undef,  '... got the right unset value');
+    ok(!$foo->meta->get_attribute('unset')->has_value($foo), 'unset attribute has no value');
+    is( $foo->undef, undef,  '... got the right undef value');
+    ok( $foo->meta->get_attribute('undef')->has_value($foo), 'undef attribute has a value');
     is($foo->number, 10, '... got the right number');
     is($foo->string, 'foo', '... got the right string');
     is($foo->float, 10.5, '... got the right float');
@@ -93,5 +99,3 @@ ok(!(-e $file), '... the file has been deleted');
     isa_ok($foo->object, 'Foo');
     is($foo->object->number, 2, '... got the right number (in the embedded object)');
 }
-
-

@@ -1,15 +1,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 13;
 use Test::Deep;
 use File::Temp qw(tempdir);
 use File::Spec::Functions;
 my $dir = tempdir( CLEANUP => 1 );
-
-BEGIN {
-    use_ok('MooseX::Storage');
-}
 
 {
     package Foo;
@@ -18,6 +14,8 @@ BEGIN {
 
     with Storage(io => 'StorableFile');
 
+    has 'unset'  => ( is => 'ro', isa => 'Any' );
+    has 'undef'  => ( is => 'ro', isa => 'Any' );
     has 'number' => (is => 'ro', isa => 'Int');
     has 'string' => (is => 'ro', isa => 'Str');
     has 'float'  => (is => 'ro', isa => 'Num');
@@ -30,6 +28,7 @@ my $file = catfile($dir,'temp.storable');
 
 {
     my $foo = Foo->new(
+        undef  => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -46,6 +45,10 @@ my $file = catfile($dir,'temp.storable');
     my $foo = Foo->load($file);
     isa_ok($foo, 'Foo');
 
+    is( $foo->unset, undef,  '... got the right unset value');
+    ok(!$foo->meta->get_attribute('unset')->has_value($foo), 'unset attribute has no value');
+    is( $foo->undef, undef,  '... got the right undef value');
+    ok( $foo->meta->get_attribute('undef')->has_value($foo), 'undef attribute has a value');
     is($foo->number, 10, '... got the right number');
     is($foo->string, 'foo', '... got the right string');
     is($foo->float, 10.5, '... got the right float');
@@ -55,4 +58,3 @@ my $file = catfile($dir,'temp.storable');
     isa_ok($foo->object, 'Foo');
     is($foo->object->number, 2, '... got the right number (in the embedded object)');
 }
-

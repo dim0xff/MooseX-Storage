@@ -8,16 +8,13 @@ use Storable;
 
 use Test::Requires qw(
     Test::Deep::JSON
-    JSON::Any
+    JSON::MaybeXS
     YAML::Any
 );
+diag 'using JSON backend: ', JSON;
+diag 'using YAML backend: ', YAML::Any->implementation;
 
-BEGIN {
-    plan tests => 30;
-    use_ok('MooseX::Storage');
-}
-
-diag('Using implementation: ', YAML::Any->implementation);
+plan tests => 33;
 
 {
     package Foo;
@@ -26,6 +23,8 @@ diag('Using implementation: ', YAML::Any->implementation);
 
     with 'MooseX::Storage::Deferred';
 
+    has 'unset'  => ( is => 'ro', isa => 'Any' );
+    has 'undef'  => ( is => 'ro', isa => 'Any' );
     has 'number' => ( is => 'ro', isa => 'Int' );
     has 'string' => ( is => 'ro', isa => 'Str' );
     has 'float'  => ( is => 'ro', isa => 'Num' );
@@ -36,6 +35,7 @@ diag('Using implementation: ', YAML::Any->implementation);
 
 {
     my $foo = Foo->new(
+        undef => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -50,6 +50,7 @@ diag('Using implementation: ', YAML::Any->implementation);
     cmp_deeply(
         $json,
         json({
+            undef => undef,
             number => 10,
             string => 'foo',
             float  => 10.5,
@@ -89,6 +90,7 @@ diag('Using implementation: ', YAML::Any->implementation);
 
 {
     my $foo = Foo->new(
+        undef => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -105,8 +107,9 @@ diag('Using implementation: ', YAML::Any->implementation);
         $struct,
         {
             '__CLASS__' => 'Foo',
-            'float'     => 10.5,
+            'undef'     => undef,
             'number'    => 10,
+            'float'     => 10.5,
             'string'    => 'foo',
             'array'     => [ 1 .. 10],
             'hash'      => { map { $_ => undef } 1 .. 10 },
@@ -122,9 +125,10 @@ diag('Using implementation: ', YAML::Any->implementation);
 {
     my $stored = Storable::nfreeze({
         '__CLASS__' => 'Foo',
-        'float'     => 10.5,
+        'undef'     => undef,
         'number'    => 10,
         'string'    => 'foo',
+        'float'     => 10.5,
         'array'     => [ 1 .. 10],
         'hash'      => { map { $_ => undef } 1 .. 10 },
         'object'    => {
@@ -153,6 +157,7 @@ diag('Using implementation: ', YAML::Any->implementation);
 
 {
     my $foo = Foo->new(
+        undef  => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -167,6 +172,10 @@ diag('Using implementation: ', YAML::Any->implementation);
     my $bar = Foo->thaw( $yaml, { 'format' => 'YAML' } );
     isa_ok( $bar, 'Foo' );
 
+    is( $foo->unset, undef,  '... got the right unset value');
+    ok(!$foo->meta->get_attribute('unset')->has_value($foo), 'unset attribute has no value');
+    is( $foo->undef, undef,  '... got the right undef value');
+    ok( $foo->meta->get_attribute('undef')->has_value($foo), 'undef attribute has a value');
     is( $bar->number, 10,    '... got the right number' );
     is( $bar->string, 'foo', '... got the right string' );
     is( $bar->float,  10.5,  '... got the right float' );
@@ -181,4 +190,3 @@ diag('Using implementation: ', YAML::Any->implementation);
     is( $bar->object->number, 2,
         '... got the right number (in the embedded object)' );
 }
-

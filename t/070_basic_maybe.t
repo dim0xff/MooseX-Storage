@@ -1,21 +1,18 @@
 use strict;
 use warnings;
 
-use Test::More tests => 22;
+use Test::More tests => 29;
 use Test::Deep;
 
-BEGIN {
-    use_ok('MooseX::Storage');
-}
-
 {
-
     package Foo;
     use Moose;
     use MooseX::Storage;
 
     with Storage;
 
+    has 'unset'   => ( is => 'ro', isa => 'Any' );
+    has 'undef'   => ( is => 'ro', isa => 'Any' );
     has 'number'  => ( is => 'ro', isa => 'Maybe[Int]' );
     has 'string'  => ( is => 'ro', isa => 'Maybe[Str]' );
     has 'boolean' => ( is => 'ro', isa => 'Maybe[Bool]' );
@@ -27,6 +24,7 @@ BEGIN {
 
 {
     my $foo = Foo->new(
+        undef   => undef,
         number  => 10,
         string  => 'foo',
         boolean => 1,
@@ -41,6 +39,7 @@ BEGIN {
         $foo->pack,
         {
             __CLASS__ => 'Foo',
+            undef     => undef,
             number    => 10,
             string    => 'foo',
             boolean   => 1,
@@ -60,6 +59,7 @@ BEGIN {
     my $foo = Foo->unpack(
         {
             __CLASS__ => 'Foo',
+            undef     => undef,
             number    => 10,
             string    => 'foo',
             boolean   => 1,
@@ -74,6 +74,10 @@ BEGIN {
     );
     isa_ok( $foo, 'Foo' );
 
+    is( $foo->unset, undef,  '... got the right unset value');
+    ok(!$foo->meta->get_attribute('unset')->has_value($foo), 'unset attribute has no value');
+    is( $foo->undef, undef,  '... got the right undef value');
+    ok( $foo->meta->get_attribute('undef')->has_value($foo), 'undef attribute has a value');
     is( $foo->number, 10,    '... got the right number' );
     is( $foo->string, 'foo', '... got the right string' );
     ok( $foo->boolean,       '... got the right boolean' );
@@ -89,7 +93,6 @@ BEGIN {
     is( $foo->object->number, 2,
         '... got the right number (in the embedded object)' );
 }
-
 
 {
 
@@ -122,6 +125,8 @@ BEGIN {
         => as 'HashRef'
         => where { scalar grep { !defined($_) } values %{$_} };
 
+    has 'unset'  => ( is => 'ro', isa => 'Any' );
+    has 'undef'  => ( is => 'ro', isa => 'Any' );
     has 'number' => ( is => 'ro', isa => 'Maybe[Natural]' );
     has 'string' => ( is => 'ro', isa => 'Maybe[FooString]' );
     has 'float'  => ( is => 'ro', isa => 'Maybe[HalfNum]' );
@@ -132,6 +137,7 @@ BEGIN {
 
 {
     my $foo = Foo->new(
+        undef  => undef,
         number => 10,
         string => 'foo',
         float  => 10.5,
@@ -145,6 +151,7 @@ BEGIN {
         $foo->pack,
         {
             __CLASS__ => 'Foo',
+            undef     => undef,
             number    => 10,
             string    => 'foo',
             float     => 10.5,
@@ -163,6 +170,7 @@ BEGIN {
     my $foo = Foo->unpack(
         {
             __CLASS__ => 'Foo',
+            undef     => undef,
             number    => 10,
             string    => 'foo',
             float     => 10.5,
@@ -176,6 +184,10 @@ BEGIN {
     );
     isa_ok( $foo, 'Foo' );
 
+    is( $foo->unset, undef,  '... got the right unset value');
+    ok(!$foo->meta->get_attribute('unset')->has_value($foo), 'unset attribute has no value');
+    is( $foo->undef, undef,  '... got the right undef value');
+    ok( $foo->meta->get_attribute('undef')->has_value($foo), 'undef attribute has a value');
     is( $foo->number, 10,    '... got the right number' );
     is( $foo->string, 'foo', '... got the right string' );
     is( $foo->float,  10.5,  '... got the right float' );
